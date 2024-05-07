@@ -1,7 +1,12 @@
 import mongoose, { Schema } from "mongoose";
-import pkg from 'jsonwebtoken';
+// import pkg from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-const { Jwt } = pkg;
+import dotenv from 'dotenv'
+dotenv.config({
+  path:"server/.env"
+})
+// const { Jwt } = pkg;
 const userSchema = new Schema(
   {
     username: {
@@ -36,12 +41,7 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
-    watchHistory: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Video",
-      },
-    ],
+    
     refreshToken: {
       type: String,
     },
@@ -64,7 +64,10 @@ userSchema.methods.isPasswordCorrect = async function (password) {
 };
 
 userSchema.methods.generateAccessToken = function () {
-  Jwt.sign(
+  // const exin=process.env.ACCESS_TOKEN_EXPIREY;
+  // console.log(exin, process.env.ACCESS_TOKEN_EXPIREY);
+
+  return jwt.sign(
     {
       //  data to add in token
       _id: this._id,
@@ -74,13 +77,13 @@ userSchema.methods.generateAccessToken = function () {
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+      expiresIn: process.env.ACCESS_TOKEN_EXPIREY,
     }
   );
 };
 
 userSchema.methods.generateRefreshToken = function () {
-  Jwt.sign(
+  return jwt.sign(
     {
       //  data to add in token
       _id: this._id,

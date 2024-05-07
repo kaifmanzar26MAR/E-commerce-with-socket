@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
+
 const registerUser = asyncHandler(async (req, res) => {
   //get user details form frontend
   const { username, email, fullname, password } = req.body;
@@ -88,15 +89,17 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
-    const user = await User.findById(userId);
+    const user = await User.findOne({_id:userId});
+    console.log(user)
     const accessToken = await user.generateAccessToken();
     const refreshToken = await user.generateRefreshToken();
     user.refreshToken = refreshToken;
-
+    console.log(accessToken, refreshToken)
     await user.save({ validateBeforeSave: false });
 
     return { accessToken, refreshToken };
   } catch (error) {
+    console.log(error)
     throw new ApiError(
       500,
       "Something went wrong while generation refersh and access token"
@@ -129,8 +132,8 @@ const loginUser = asyncHandler(async (req, res) => {
     user._id
   );
 
-  const loggedInuser = await user
-    .findById(user._id)
+  const loggedInuser = await User
+    .findOne({_id:user._id})
     .select("-password -refreshToken");
 
   //sending cookies
