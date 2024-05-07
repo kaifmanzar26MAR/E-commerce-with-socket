@@ -44,13 +44,13 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   //upload image and avatar in cloudinary
-
+  console.log(avatarLocalPath, coverImageLocalPath)
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   // let coverImage=null;
   // if(coverImageLocalPath)
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
-  //  console.log("cv",coverImage)
+   console.log("cv",coverImage, "av", avatar)
   if (!avatar) {
     throw new ApiError(500, "Avtar not found");
   }
