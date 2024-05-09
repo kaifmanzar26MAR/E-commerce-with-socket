@@ -4,10 +4,11 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import RawProduct from "../models/rawProduct.model.js";
 import { Seller } from "../models/seller.model.js";
 import ReadyProduct from "../models/readyProduct.model.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const addRawProduct = asyncHandler(async (req, res) => {
   const seller_id = req.seller._id.toString();
-  console.log(seller_id);
+  // console.log(seller_id);
   const { p_id, p_name, p_title, p_description } = req.body;
 
   if (
@@ -30,12 +31,33 @@ const addRawProduct = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Given name or id already exists!!");
   }
 
+  const productImageLocalPath = req.files?.productImage[0]?.path;
+  
+  if (!productImageLocalPath) {
+    throw new ApiError(500, "Not found Product Image Path");
+  }
+
+  //upload image and avatar in cloudinary
+  // console.log(productImageLocalPath)
+  const productImage = await uploadOnCloudinary(productImageLocalPath);
+  
+
+  //  console.log( "pI", productImage)
+  if (!productImage) {
+    throw new ApiError(500, "ProdcutImage not found");
+  }
+
+
+
+
+
   const rawProdcutInstance = await RawProduct.create({
     created_by: seller_id,
     p_id,
     p_name,
     p_title,
     p_description,
+    p_image:productImage.url
   });
 
   if (!rawProdcutInstance) {

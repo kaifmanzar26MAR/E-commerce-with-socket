@@ -26,6 +26,10 @@ const rawProductSchema= new Schema({
         type:String,
         required:true,
     },
+    p_image:{
+        type:String,
+        required:true
+    }
     
 },{timestamps:true});
 
