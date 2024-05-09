@@ -20,7 +20,7 @@ const readyProductSchema= new Schema({
         required:true,
         default:5
     },
-    p_instockQuantity:{
+    p_addedQuantity:{
         type:Number,
         required:true
     },

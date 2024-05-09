@@ -3,10 +3,11 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import RawProduct from "../models/rawProduct.model.js";
 import { Seller } from "../models/seller.model.js";
+import ReadyProduct from "../models/readyProduct.model.js";
 
 const addRawProduct = asyncHandler(async (req, res) => {
-  const seller_id = (req.seller._id).toString();
-  console.log(seller_id)
+  const seller_id = req.seller._id.toString();
+  console.log(seller_id);
   const { p_id, p_name, p_title, p_description } = req.body;
 
   if (
@@ -52,4 +53,96 @@ const addRawProduct = asyncHandler(async (req, res) => {
     );
 });
 
-export { addRawProduct };
+const addReadyProduct = asyncHandler(async (req, res) => {
+  const seller = req.seller._id.toString();
+  const { rawProduct, p_mrp, p_discount, p_addedQuantity } = req.body;
+
+  if ([rawProduct].some((fields) => fields?.trim() === "")) {
+    throw new ApiError(500, "All the fields are required!");
+  }
+
+  if (p_mrp === null || p_mrp === 0) {
+    throw new ApiError(500, "MRP can't be empty or 0");
+  }
+  if (p_addedQuantity === null || p_addedQuantity === 0) {
+    throw new ApiError(500, "Added Quantity can't be empty or 0");
+  }
+
+  const isRawProductExist = await RawProduct.findOne({ _id: rawProduct });
+
+  if (!isRawProductExist) {
+    throw new ApiError(500, "Raw Product not found!!");
+  }
+
+  const readyProductIsntance = await ReadyProduct.create({
+    seller,
+    rawProduct,
+    p_mrp,
+    p_discount,
+    p_addedQuantity,
+  });
+
+  if (!readyProductIsntance)
+    throw new ApiError(
+      500,
+      "Something went wrong in creating the ReadyProdcut!!"
+    );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        201,
+        readyProductIsntance,
+        "ReadyProduct created Successfully!!"
+      )
+    );
+});
+
+const updateProduct = asyncHandler(async (req, res) => {
+  const seller = req.seller._id;
+
+  const { readyProduct, addedStock, new_mrp, new_discount } = req.body;
+
+  if (readyProduct === "") {
+    throw new ApiError(500, "Please Select a Product!!!");
+  }
+
+  // if (addedStock === null || addedStock === undefined) {
+  //   throw new ApiError(500, "addedStock cant be null or undefinded!!");
+  // }
+
+  const isReadyProductExist = await ReadyProduct.findOne({ _id: readyProduct });
+
+  if (!isReadyProductExist) {
+    throw new ApiError(500, "Product Not Found!!");
+  }
+
+
+  if(isReadyProductExist.seller.toString()!= seller.toString()){
+    throw new ApiError(400, "This product is now added by the login seller!!");
+  }
+
+  
+  isReadyProductExist.p_addedQuantity =
+    isReadyProductExist.p_addedQuantity + (addedStock ? addedStock : 0);
+
+  isReadyProductExist.p_mrp = new_mrp ? new_mrp : isReadyProductExist.p_mrp;
+
+  isReadyProductExist.p_discount = new_discount ? new_discount : isReadyProductExist.p_discount;
+
+  
+  isReadyProductExist.save();
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        201,
+        isReadyProductExist,
+        "Ready Prodcut Quanttity updated successfully!!"
+      )
+    );
+});
+
+export { addRawProduct, addReadyProduct, updateProduct };

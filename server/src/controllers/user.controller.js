@@ -4,6 +4,10 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
+function containsHTMLTags(email) {
+  const htmlRegex = /<[^>]*>/; // Regular expression to match HTML tags
+  return htmlRegex.test(email);
+}
 
 const registerUser = asyncHandler(async (req, res) => {
   //get user details form frontend
@@ -17,6 +21,12 @@ const registerUser = asyncHandler(async (req, res) => {
   ) {
     throw new ApiError(500, "All fields are required");
   }
+
+  if(containsHTMLTags(username) || containsHTMLTags(email) || containsHTMLTags(fullname)){
+    throw new ApiError(400, "Invalid input!!")
+  }
+
+
   console.log("email", email);
   // is user exists alerady
   const isuserpresent = await User.findOne({
@@ -112,6 +122,11 @@ const loginUser = asyncHandler(async (req, res) => {
 
   if (!username || !email) {
     throw new ApiError(400, "username or eamil is required!!");
+  }
+
+
+  if(containsHTMLTags(username) || containsHTMLTags(email)){
+    throw new ApiError(500, "Invalid Input!!");
   }
 
   const user = await User.findOne({

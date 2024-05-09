@@ -4,9 +4,19 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { Seller } from "../models/seller.model.js";
 
+
+
+function containsHTMLTags(email) {
+  const htmlRegex = /<[^>]*>/; // Regular expression to match HTML tags
+  return htmlRegex.test(email);
+}
+
+
+
 const registerSeller = asyncHandler(async (req, res) => {
   //get seller details form frontend
-  const { s_username, s_email, s_name, password, s_address, s_shopName } = req.body;
+  const { s_username, s_email, s_name, password, s_address, s_shopName } =
+    req.body;
 
   // vlaidation - not emapty
   if (
@@ -16,7 +26,11 @@ const registerSeller = asyncHandler(async (req, res) => {
   ) {
     throw new ApiError(500, "All fields are required");
   }
-  
+
+  if(containsHTMLTags(s_username) || containsHTMLTags(s_email) || containsHTMLTags(s_name) || containsHTMLTags(s_shopName)){
+    throw new ApiError(500, "Invalid Input!!")
+  }
+
   // is seller exists alerady
   const isSellerpresent = await Seller.findOne({
     $or: [{ s_username }, { s_email }],
@@ -86,22 +100,19 @@ const registerSeller = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, seller, "Seller Registerd Successfully"));
 });
 
-
-
-
 const generateAccessAndRefreshTokens = async (sellerId) => {
   try {
-    const seller = await Seller.findOne({_id:sellerId});
-    console.log(seller)
+    const seller = await Seller.findOne({ _id: sellerId });
+    console.log(seller);
     const accessToken = await seller.generateAccessToken();
     const refreshToken = await seller.generateRefreshToken();
     seller.refreshToken = refreshToken;
-    console.log(accessToken, refreshToken)
+    console.log(accessToken, refreshToken);
     await seller.save({ validateBeforeSave: false });
 
     return { accessToken, refreshToken };
   } catch (error) {
-    console.log(error)
+    console.log(error);
     throw new ApiError(
       500,
       "Something went wrong while generation refersh and access token"
@@ -109,12 +120,19 @@ const generateAccessAndRefreshTokens = async (sellerId) => {
   }
 };
 
+
+
 const loginSeller = asyncHandler(async (req, res) => {
   const { s_email, s_username, password } = req.body;
 
   if (!s_username || !s_email) {
     throw new ApiError(400, "s_username or s_eamil is required!!");
   }
+
+  // const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s_email);
+    if (containsHTMLTags(s_email) || containsHTMLTags(s_username)) {
+        throw new ApiError(400, "Invalid email address");
+    }
 
   const seller = await Seller.findOne({
     $or: [{ s_username }, { s_email }],
@@ -134,9 +152,9 @@ const loginSeller = asyncHandler(async (req, res) => {
     seller._id
   );
 
-  const loggedInSeller = await Seller
-    .findOne({_id:seller._id})
-    .select("-password -refreshToken");
+  const loggedInSeller = await Seller.findOne({ _id: seller._id }).select(
+    "-password -refreshToken"
+  );
 
   //sending cookies
 
@@ -162,6 +180,4 @@ const loginSeller = asyncHandler(async (req, res) => {
     );
 });
 
-
-
-export {registerSeller, loginSeller}
+export { registerSeller, loginSeller };
