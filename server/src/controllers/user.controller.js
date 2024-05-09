@@ -4,9 +4,9 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
-function containsHTMLTags(email) {
+function containsHTMLTags(args) {
   const htmlRegex = /<[^>]*>/; // Regular expression to match HTML tags
-  return htmlRegex.test(email);
+  return htmlRegex.test(args);
 }
 
 const registerUser = asyncHandler(async (req, res) => {
