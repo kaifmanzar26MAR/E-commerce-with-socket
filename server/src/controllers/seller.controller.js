@@ -88,4 +88,80 @@ const registerSeller = asyncHandler(async (req, res) => {
 
 
 
-export {registerSeller}
+
+const generateAccessAndRefreshTokens = async (sellerId) => {
+  try {
+    const seller = await Seller.findOne({_id:sellerId});
+    console.log(seller)
+    const accessToken = await seller.generateAccessToken();
+    const refreshToken = await seller.generateRefreshToken();
+    seller.refreshToken = refreshToken;
+    console.log(accessToken, refreshToken)
+    await seller.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    console.log(error)
+    throw new ApiError(
+      500,
+      "Something went wrong while generation refersh and access token"
+    );
+  }
+};
+
+const loginSeller = asyncHandler(async (req, res) => {
+  const { s_email, s_username, password } = req.body;
+
+  if (!s_username || !s_email) {
+    throw new ApiError(400, "s_username or s_eamil is required!!");
+  }
+
+  const seller = await Seller.findOne({
+    $or: [{ s_username }, { s_email }],
+  });
+
+  if (!seller) {
+    throw new ApiError(500, "Seller does not exist!!");
+  }
+
+  const passwordCheck = await seller.isPasswordCorrect(password);
+
+  if (!passwordCheck) {
+    throw new ApiError(500, "Invalid seller credential");
+  }
+
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    seller._id
+  );
+
+  const loggedInSeller = await Seller
+    .findOne({_id:seller._id})
+    .select("-password -refreshToken");
+
+  //sending cookies
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(201)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          seller: loggedInSeller,
+          accessToken,
+          refreshToken,
+        },
+        "Seller logged In Successfully"
+      )
+    );
+});
+
+
+
+export {registerSeller, loginSeller}
