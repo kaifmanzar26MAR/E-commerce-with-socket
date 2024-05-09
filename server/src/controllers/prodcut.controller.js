@@ -167,4 +167,24 @@ const updateProduct = asyncHandler(async (req, res) => {
     );
 });
 
-export { addRawProduct, addReadyProduct, updateProduct };
+const getAllProducts= asyncHandler(async(req,res)=>{
+  const allProducts = await ReadyProduct.find()
+    .populate({
+        path: 'rawProduct'
+    })
+    .populate({
+        path: 'seller',
+        select: '-password -refreshToken' // Exclude fields from seller
+    });
+
+  if(!allProducts){
+    throw new ApiError(500, "Something went wrong in fetching Prodcuts!!!")
+  }
+
+  // allProducts=allProducts.select("-seller.password -seller.refreshTo")
+
+  return res.status(200).json(new ApiResponse(201, allProducts, "Got All Prodcuts!!"))
+})
+
+
+export { addRawProduct, addReadyProduct, updateProduct, getAllProducts };
