@@ -32,7 +32,7 @@ const addRawProduct = asyncHandler(async (req, res) => {
   }
 
   const productImageLocalPath = req.files?.productImage[0]?.path;
-  
+
   if (!productImageLocalPath) {
     throw new ApiError(500, "Not found Product Image Path");
   }
@@ -40,16 +40,11 @@ const addRawProduct = asyncHandler(async (req, res) => {
   //upload image and avatar in cloudinary
   // console.log(productImageLocalPath)
   const productImage = await uploadOnCloudinary(productImageLocalPath);
-  
 
   //  console.log( "pI", productImage)
   if (!productImage) {
     throw new ApiError(500, "ProdcutImage not found");
   }
-
-
-
-
 
   const rawProdcutInstance = await RawProduct.create({
     created_by: seller_id,
@@ -57,7 +52,7 @@ const addRawProduct = asyncHandler(async (req, res) => {
     p_name,
     p_title,
     p_description,
-    p_image:productImage.url
+    p_image: productImage.url,
   });
 
   if (!rawProdcutInstance) {
@@ -140,20 +135,19 @@ const updateProduct = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Product Not Found!!");
   }
 
-
-  if(isReadyProductExist.seller.toString()!= seller.toString()){
+  if (isReadyProductExist.seller.toString() != seller.toString()) {
     throw new ApiError(400, "This product is now added by the login seller!!");
   }
 
-  
   isReadyProductExist.p_addedQuantity =
     isReadyProductExist.p_addedQuantity + (addedStock ? addedStock : 0);
 
   isReadyProductExist.p_mrp = new_mrp ? new_mrp : isReadyProductExist.p_mrp;
 
-  isReadyProductExist.p_discount = new_discount ? new_discount : isReadyProductExist.p_discount;
+  isReadyProductExist.p_discount = new_discount
+    ? new_discount
+    : isReadyProductExist.p_discount;
 
-  
   isReadyProductExist.save();
 
   return res
@@ -167,24 +161,47 @@ const updateProduct = asyncHandler(async (req, res) => {
     );
 });
 
-const getAllProducts= asyncHandler(async(req,res)=>{
+const getAllProducts = asyncHandler(async (req, res) => {
   const allProducts = await ReadyProduct.find()
     .populate({
-        path: 'rawProduct'
+      path: "rawProduct",
     })
     .populate({
-        path: 'seller',
-        select: '-password -refreshToken' // Exclude fields from seller
+      path: "seller",
+      select: "-password -refreshToken", // Exclude fields from seller
     });
 
-  if(!allProducts){
-    throw new ApiError(500, "Something went wrong in fetching Prodcuts!!!")
+  if (!allProducts) {
+    throw new ApiError(500, "Something went wrong in fetching Prodcuts!!!");
   }
 
   // allProducts=allProducts.select("-seller.password -seller.refreshTo")
 
-  return res.status(200).json(new ApiResponse(201, allProducts, "Got All Prodcuts!!"))
-})
+  return res
+    .status(200)
+    .json(new ApiResponse(201, allProducts, "Got All Prodcuts!!"));
+});
 
+const getProdcutById = asyncHandler(async (req, res) => {
+  const _id = req.params._id;
+  const prodcut = await ReadyProduct.findOne({ _id })
+    .populate({
+      path: "rawProduct",
+    })
+    .populate({
+      path: "seller",
+      select: "-password -refreshToken", // Exclude fields from seller
+    });
+  if (!prodcut) {
+    throw new ApiError(500, "No Product Found!!!")
+  }
 
-export { addRawProduct, addReadyProduct, updateProduct, getAllProducts };
+  return res.status(200).json(new ApiResponse(201, prodcut, "Got prodcut Successfully!!!"));
+});
+export {
+  addRawProduct,
+  addReadyProduct,
+  updateProduct,
+  getAllProducts,
+  getProdcutById,
+};
