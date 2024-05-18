@@ -1,11 +1,10 @@
-import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import homeRouter from "./routes/home.routes.js";
 import userRouter from "./routes/user.routes.js";
 import sellerRouter from './routes/seller.routes.js';
 import prodcutRouter from './routes/product.routes.js'
-const app = express();
+import { app } from "./connection/socket.js";
 
 app.use(
   cors({

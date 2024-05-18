@@ -3,7 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
-
+import { io } from "../connection/socket.connection.js";
 function containsHTMLTags(args) {
   const htmlRegex = /<[^>]*>/; // Regular expression to match HTML tags
   return htmlRegex.test(args);
@@ -157,6 +157,9 @@ const loginUser = asyncHandler(async (req, res) => {
     httpOnly: true,
     secure: true,
   };
+
+  
+  io.emit("login", user._id);
 
   return res
     .status(201)
