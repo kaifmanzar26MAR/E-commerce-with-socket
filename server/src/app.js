@@ -3,8 +3,10 @@ import cookieParser from "cookie-parser";
 import homeRouter from "./routes/home.routes.js";
 import userRouter from "./routes/user.routes.js";
 import sellerRouter from './routes/seller.routes.js';
-import prodcutRouter from './routes/product.routes.js'
-import { app } from "./connection/socket.js";
+import prodcutRouter from './routes/product.routes.js';
+import bodyParser from "body-parser";
+import express from 'express';
+import { app } from "./connection/socket.connection.js";
 
 app.use(
   cors({
@@ -12,14 +14,13 @@ app.use(
     credentials: true,
   })
 );
-
+app.use(bodyParser.json())
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
-app.use(cookieParser());
 
 //routes declaration
-app.use("/", homeRouter);
+app.use("/api/v1", homeRouter);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/seller", sellerRouter);
 app.use("/api/v1/product", prodcutRouter);
